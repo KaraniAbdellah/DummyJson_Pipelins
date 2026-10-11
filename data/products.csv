@@ -1,0 +1,26 @@
+product_id,product_name,category,subcategory,brand,unit_price
+1,The Sinya,Epicerie,Boissons chaudes,Sultan,35.00
+2,Huile d'olive,Epicerie,Huiles,Lesieur,78.00
+3,Huile d'argan,Epicerie,Huiles,Ouiam,145.00
+4,Couscous,Epicerie,Feculents,Dari,12.00
+5,Semoule,Epicerie,Feculents,Dari,9.50
+6,Dattes Majhoul,Epicerie,Fruits secs,Zagora,55.00
+7,Amandes,Epicerie,Fruits secs,Zagora,68.00
+8,Miel,Epicerie,Produits sucres,Ain Saiss,90.00
+9,Sardines en boite,Epicerie,Conserves,Titus,7.50
+10,Farine,Epicerie,Feculents,Dari,6.00
+11,Sucre,Epicerie,Produits sucres,Cosumar,8.50
+12,Sel,Epicerie,Epices,Halima,4.00
+13,Lait,Frais,Produits laitiers,Centrale Danone,7.80
+14,Beurre,Frais,Produits laitiers,President,20.00
+15,Oeufs,Frais,Produits laitiers,Ferme Adarouch,2.00
+16,Olives noires,Epicerie,Conserves,Aicha,22.00
+17,Olives vertes,Epicerie,Conserves,Aicha,18.00
+18,Oranges,Frais,Fruits et legumes,Local,5.00
+19,Citrons,Frais,Fruits et legumes,Local,6.00
+20,Riz,Epicerie,Feculents,Dari,9.00
+21,Lentilles,Epicerie,Legumineuses,Dari,11.00
+22,Pois chiches,Epicerie,Legumineuses,Dari,13.00
+23,Tomates,Frais,Fruits et legumes,Local,5.50
+24,Pommes de terre,Frais,Fruits et legumes,Local,4.00
+25,Pain,Frais,Boulangerie,Boulangerie BIM,2.00
