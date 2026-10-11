@@ -7,11 +7,21 @@
 from airflow import DAG
 from datetime import datetime, timedelta
 from airflow.operators.python import PythonOperator
-import numpy as np
+import pandas as pd
 
 
-def _load_csv():
-    print("CSV Loaded Successfully ...")
+DATA_PATH = "/home/abdellah/Documents/git_projects/DummyJson_Pipelins/data"
+
+def _load_csv(file):
+    print("Get Data from Data Folder")
+    FULL_PATH = f"{DATA_PATH}/{file}"
+    df = pd.read_csv(FULL_PATH)
+    print(df.head(3))
+    print(FULL_PATH)
+
+    print("Connect to Posgress DB")
+
+    print("Add Data to Posgress DB")
 
     return True
 
@@ -19,11 +29,13 @@ def _load_csv():
 with DAG(
     "TheBatchDag",
     start_date=datetime(2026, 10, 11),
-    schedule="@daily",
+    schedule=timedelta(seconds=10),
     catchup=False,
     tags=["bim"]
 ) as dag:
-    load_data = PythonOperator(
-        task_id="load_csv",
-        python_callable=_load_csv,
-    )
+    for file in ["products.csv", "promotions.csv", "stores.csv"]:
+        load_data = PythonOperator(
+            task_id=f"load_{file}",
+            python_callable=_load_csv,
+            op_kwargs={"file": file},
+        )
