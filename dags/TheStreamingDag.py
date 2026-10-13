@@ -40,7 +40,7 @@ def _get_data_from_api(api_url):
 with DAG(
     "TheStreamingDag",
     start_date=datetime(2026, 10, 13),
-    schedule=timedelta(seconds=30),
+    schedule=timedelta(seconds=60),
     catchup=False,
     tags=["bim"]
 ) as dag:

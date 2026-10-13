@@ -36,7 +36,7 @@ def _load_csv(table):
 with DAG(
     "TheBatchDag",
     start_date=datetime(2026, 10, 13),
-    schedule=timedelta(seconds=60),
+    schedule="@daily",
     catchup=False,
     tags=["bim"]
 ) as dag:
