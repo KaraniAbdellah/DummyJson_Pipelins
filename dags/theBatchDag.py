@@ -35,14 +35,14 @@ def _load_csv(table):
 
 with DAG(
     "TheBatchDag",
-    start_date=datetime(2026, 10, 11),
+    start_date=datetime(2026, 10, 13),
     schedule=timedelta(seconds=60),
     catchup=False,
     tags=["bim"]
 ) as dag:
-    for file in ["products", "promotions", "stores"]:
+    for table in ["products", "promotions", "stores"]:
         load_data = PythonOperator(
-            task_id=f"load_{file}",
+            task_id=f"load_{table}",
             python_callable=_load_csv,
-            op_kwargs={"file": file},
+            op_kwargs={"table": table},
         )

@@ -3,3 +3,4 @@ pandas
 requests
 numpy
 psycopg2-binary
+python-dotenv
