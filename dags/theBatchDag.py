@@ -8,32 +8,39 @@ from airflow import DAG
 from datetime import datetime, timedelta
 from airflow.operators.python import PythonOperator
 import pandas as pd
-
+from db import get_connection, run_sql_file
 
 DATA_PATH = "/home/abdellah/Documents/git_projects/DummyJson_Pipelins/data"
 
-def _load_csv(file):
+
+
+def _load_csv(table):
     print("Get Data from Data Folder")
-    FULL_PATH = f"{DATA_PATH}/{file}"
-    df = pd.read_csv(FULL_PATH)
-    print(df.head(3))
-    print(FULL_PATH)
-
+    FULL_PATH = f"{DATA_PATH}/{table}.csv"
+    
+    # Connect to PostGreess DB
     print("Connect to Posgress DB")
-
-    print("Add Data to Posgress DB")
-
+    conn = get_connection()
+    
+    # Open File && Get Data from && Save in DB
+    with conn, conn.cursor() as cur, open (FULL_PATH, encoding="utf-8") as f:
+        cur.execute(f"TRUNCATE TABLE raw.{table}")
+        columns = f.readline().strip()
+        f.seek(0) # reset cusrsor to start
+        cur.copy_expert(f"COPY raw.{table} ({columns}) FROM STDIN WITH CSV HEADER", f)
+    
     return True
+
 
 
 with DAG(
     "TheBatchDag",
     start_date=datetime(2026, 10, 11),
-    schedule=timedelta(seconds=10),
+    schedule=timedelta(seconds=60),
     catchup=False,
     tags=["bim"]
 ) as dag:
-    for file in ["products.csv", "promotions.csv", "stores.csv"]:
+    for file in ["products", "promotions", "stores"]:
         load_data = PythonOperator(
             task_id=f"load_{file}",
             python_callable=_load_csv,

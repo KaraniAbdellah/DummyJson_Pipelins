@@ -2,3 +2,4 @@ apache-airflow-providers-common-sql[pandas]
 pandas
 requests
 numpy
+psycopg2-binary
