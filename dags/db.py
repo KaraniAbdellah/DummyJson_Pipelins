@@ -12,7 +12,7 @@ def get_connection():
 
 
 
-def run_sql_file(path):
+def run_sql_files(path):
     """Run one .sql file from the sql/ folder."""
     with open(f"{path}", encoding="utf-8") as f:
         sql = f.read()
