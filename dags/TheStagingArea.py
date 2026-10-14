@@ -1,5 +1,4 @@
 from airflow import DAG
-from airflow.models import DagRun
 from datetime import datetime, timedelta
 from airflow.sensors.external_task import ExternalTaskSensor
 from airflow.operators.python import PythonOperator
@@ -13,32 +12,47 @@ def _run_sql(f_name):
     print("Create Tables in STaging Schema")
 
 
+
+
+
 with DAG(
     "TheStagingArea",
     start_date=datetime(2026, 10, 13),
-    schedule=timedelta(seconds=120),
+    schedule="* * * * *",
     catchup=False,
     tags=["bim"]
     ) as dag:
-    
-    waits = [
-        PythonSensor(
-            task_id=f"wait_for_{dag_id}",
-            python_callable=has_succeeded,
-            op_args=[dag_id],
-            mode="reschedule",
-            poke_interval=10,
-            timeout=90,
-            soft_fail=True,
-        )
-        for dag_id in ["TheBatchDag", "TheStreamingDag"]
-    ]
-    
+
+    wait_batch_dag = ExternalTaskSensor(
+        task_id="WaitBatchDag",
+        external_dag_id="TheBatchDag",
+        allowed_states=["success"],
+        external_task_id=None,  # Wait for the DAG run
+        execution_delta=timedelta(0),
+        poke_interval=10,                   # check every 10 seconds
+        timeout=300,                        # wait up to 5 minutes
+        mode="reschedule",
+    )
+
+    wait_streaming_dag = ExternalTaskSensor(
+        task_id="WaitStreamingDag",
+        external_dag_id="TheStreamingDag",
+        allowed_states=["success"],
+        external_task_id=None, # wait all tasks
+        execution_delta=timedelta(0),
+        poke_interval=10,                   # check every 10 seconds
+        timeout=300,
+        mode="reschedule",
+    )
+
+    run_sql_tasks_arr = []
     for f_name in ["checkouts", "products", "stores", "promotions"]:
-        run_sql = PythonOperator(
+        task = PythonOperator(
             task_id = f"run_sql_{f_name}",
             python_callable=_run_sql,
             op_args=[f_name]
         )
+        run_sql_tasks_arr.append(task)
 
-    [ext_task_sen] >> run_sql
+    for task in run_sql_tasks_arr:
+        [wait_batch_dag, wait_streaming_dag] >> task

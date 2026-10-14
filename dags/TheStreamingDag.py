@@ -20,7 +20,7 @@ def _get_data_from_api(api_url):
     print("Print verify = ", os.getenv("VERIFY_SSL"))
     carts = requests.get(url, timeout=10, verify=verify).json()["carts"]
     print(carts)
-    
+
     now = datetime.utcnow()
     conn = get_connection()
     with conn, conn.cursor() as cur:
@@ -40,7 +40,7 @@ def _get_data_from_api(api_url):
 with DAG(
     "TheStreamingDag",
     start_date=datetime(2026, 10, 13),
-    schedule=timedelta(seconds=60),
+    schedule="* * * * *",
     catchup=False,
     tags=["bim"]
 ) as dag:
@@ -49,5 +49,3 @@ with DAG(
         python_callable=_get_data_from_api,
         op_args=[API_URL]
     )
-
-
