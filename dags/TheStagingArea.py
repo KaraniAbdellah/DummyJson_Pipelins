@@ -6,13 +6,10 @@ from db import run_sql_file
 
 
 
-def _run_sql(f_name):
+def _create_staging_table(f_name):
     FULL_PATH = f"/home/abdellah/Documents/git_projects/DummyJson_Pipelins/sql/staging/{f_name}.sql"
     run_sql_file(FULL_PATH)
-    print("Create Tables in STaging Schema")
-
-
-
+    print("Create Tables in Staging Schema")
 
 
 with DAG(
@@ -49,7 +46,7 @@ with DAG(
     for f_name in ["checkouts", "products", "stores", "promotions"]:
         task = PythonOperator(
             task_id = f"run_sql_{f_name}",
-            python_callable=_run_sql,
+            python_callable=_create_staging_table,
             op_args=[f_name]
         )
         run_sql_tasks_arr.append(task)

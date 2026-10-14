@@ -21,5 +21,3 @@ def run_sql_file(path):
     with conn, conn.cursor() as cur:   # "with conn" = commit at the end
         cur.execute(sql)
     conn.close()
-
-
