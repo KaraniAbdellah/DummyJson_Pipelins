@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Warehouse Explorer | Raw • Staging • Mart</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-brand-100 selection:text-brand-700">
+
+  <!-- Main Content Layout -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1 flex flex-col space-y-6">
+
+    <!-- Schema Flow Header / Pipeline View -->
+    <section class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-xs">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight">Data Warehouse Layers</h1>
+          <p class="text-sm text-slate-500">Trace data evolution from source landing to aggregated analytics marts.</p>
+        </div>
+        <!-- Global Quick Stats -->
+        <div class="flex items-center gap-4 text-xs font-mono text-slate-500">
+          <div><span class="font-bold text-slate-800" id="total-tables-stat">11</span> Tables</div>
+          <div class="h-3 w-px bg-slate-300"></div>
+          <div><span class="font-bold text-slate-800" id="current-layer-stat">MART</span> Active</div>
+        </div>
+      </div>
+
+      <!-- Schema Tabs Navigation -->
+      <div class="flex border-b border-slate-200 gap-2 sm:gap-4 overflow-x-auto" id="schema-tabs">
+        <button onclick="selectSchema('raw')" id="tab-raw" class="schema-tab pb-3 px-3 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-2 border-b-2 border-transparent transition-all">
+          <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+          <span>1. Raw</span>
+          <span class="text-xs px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono">4</span>
+        </button>
+        <button onclick="selectSchema('staging')" id="tab-staging" class="schema-tab pb-3 px-3 text-sm font-semibold text-slate-500 hover:text-slate-800 flex items-center gap-2 border-b-2 border-transparent transition-all">
+          <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+          <span>2. Staging</span>
+          <span class="text-xs px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 font-mono">4</span>
+        </button>
+        <button onclick="selectSchema('mart')" id="tab-mart" class="schema-tab pb-3 px-3 text-sm font-semibold text-sky-600 border-sky-600 flex items-center gap-2 border-b-2 transition-all">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+          <span>3. Mart</span>
+          <span class="text-xs px-1.5 py-0.5 rounded-md bg-sky-100 text-sky-700 font-mono">3</span>
+        </button>
+      </div>
+
+      <!-- Table Selection Chips -->
+      <div class="pt-4 flex flex-wrap items-center gap-2" id="table-chips">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- Data Overview & Controls Panel -->
+    <section class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden flex flex-col flex-1">
+
+      <!-- Table Controls Bar -->
+      <div class="p-4 sm:p-5 border-b border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-mono text-xs uppercase px-2 py-0.5 rounded font-bold" id="badge-schema-name">mart</span>
+            <h2 class="text-lg font-bold text-slate-900 font-mono" id="current-table-title">revenue_by_store</h2>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5" id="current-table-desc">Calculated store-level revenue aggregated from checkouts.</p>
+        </div>
+
+        <!-- Filter, Export, Refresh toolbar -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Live Search -->
+          <div class="relative min-w-[200px] sm:min-w-[260px]">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"></i>
+            <input type="text" id="filter-input" placeholder="Search rows..." oninput="onSearchChange(event)"
+              class="w-full text-xs pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:bg-white transition-all">
+          </div>
+
+          <!-- Page size selector -->
+          <select id="rows-per-page" onchange="changePageSize(event)" class="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-2 font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <option value="10">10 / page</option>
+            <option value="25" selected>25 / page</option>
+            <option value="50">50 / page</option>
+          </select>
+
+          <!-- Export CSV button -->
+          <button onclick="exportCurrentTableCSV()" class="inline-flex items-center space-x-1.5 px-3 py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span class="hidden sm:inline">Export</span>
+          </button>
+
+          <!-- Refresh Data button -->
+          <button onclick="refreshData()" class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 rounded-lg transition-colors" title="Reload Table">
+            <i data-lucide="rotate-cw" class="w-4 h-4" id="refresh-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Strip -->
+      <div id="metrics-strip" class="bg-slate-50/70 border-b border-slate-200 px-5 py-2.5 flex items-center justify-between text-xs text-slate-600">
+        <div class="flex items-center gap-6">
+          <div>Total Rows: <span class="font-semibold text-slate-900 font-mono" id="stat-total-rows">0</span></div>
+          <div>Filtered: <span class="font-semibold text-slate-900 font-mono" id="stat-filtered-rows">0</span></div>
+          <div>Columns: <span class="font-semibold text-slate-900 font-mono" id="stat-total-cols">0</span></div>
+        </div>
+        <div class="hidden sm:flex items-center gap-1.5 text-slate-500 font-mono text-[11px]">
+          <i data-lucide="info" class="w-3.5 h-3.5"></i>
+          <span id="data-latency-hint">Instant Client Render</span>
+        </div>
+      </div>
+
+      <!-- Table Viewport -->
+      <div class="relative overflow-x-auto flex-1 min-h-[360px] max-h-[580px]">
+
+        <!-- Loading State Overlay -->
+        <div id="table-loader" class="hidden absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center z-10">
+          <div class="flex items-center space-x-2 text-sm text-sky-600 font-medium">
+            <i data-lucide="loader" class="w-5 h-5 animate-spin"></i>
+            <span>Loading records...</span>
+          </div>
+        </div>
+
+        <!-- Empty / Error Banner -->
+        <div id="empty-state" class="hidden py-20 flex flex-col items-center justify-center text-center p-4">
+          <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+            <i data-lucide="filter-x" class="w-6 h-6"></i>
+          </div>
+          <h4 class="text-sm font-semibold text-slate-800">No records found</h4>
+          <p class="text-xs text-slate-500 mt-1 max-w-sm">No rows matched your search or the table is currently empty.</p>
+        </div>
+
+        <!-- Interactive Data Grid -->
+        <table id="data-grid" class="w-full text-left border-collapse text-xs">
+          <thead class="sticky top-0 bg-slate-100/95 backdrop-blur-xs text-slate-700 font-semibold uppercase tracking-wider border-b border-slate-200 z-1" id="table-head">
+            <!-- Headers injected via JS -->
+          </thead>
+          <tbody id="table-body" class="divide-y divide-slate-100 text-slate-600 font-mono">
+            <!-- Rows injected via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Footer -->
+      <div class="border-t border-slate-200 px-5 py-3 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+        <span class="text-slate-500" id="pagination-info">Showing 1 to 10 of 10 entries</span>
+        <div class="flex items-center space-x-1">
+          <button id="btn-prev" onclick="goToPage('prev')" class="px-2.5 py-1.5 border border-slate-200 rounded-md font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            Previous
+          </button>
+          <div id="page-numbers" class="flex items-center space-x-1">
+            <!-- Dynamic page numbers -->
+          </div>
+          <button id="btn-next" onclick="goToPage('next')" class="px-2.5 py-1.5 border border-slate-200 rounded-md font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed">
+            Next
+          </button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Schema Architecture Card -->
+    
+  </main>
+
+  <!-- Connection Configuration Modal -->
+  <div id="config-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 hidden">
+    <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-md p-6 overflow-hidden">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+          <i data-lucide="database" class="w-4 h-4 text-sky-600"></i>
+          Datasource Configuration
+        </h3>
+        <button onclick="toggleConfigModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="py-4 space-y-4 text-xs">
+        <div>
+          <label class="block font-semibold text-slate-700 mb-1">Mode Selection</label>
+          <div class="grid grid-cols-2 gap-2">
+            <button id="mode-btn-mock" onclick="setDataSourceMode('mock')" class="p-2.5 rounded-lg border text-left font-medium transition-all">
+              <div class="font-bold text-slate-800">Built-in Mock</div>
+              <div class="text-[11px] text-slate-500">Ready for Live Server</div>
+            </button>
+            <button id="mode-btn-api" onclick="setDataSourceMode('api')" class="p-2.5 rounded-lg border text-left font-medium transition-all">
+              <div class="font-bold text-slate-800">Postgres REST API</div>
+              <div class="text-[11px] text-slate-500">Connect to backend</div>
+            </button>
+          </div>
+        </div>
+
+        <div id="api-config-fields" class="space-y-3 pt-2 border-t border-slate-100 hidden">
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">Backend Base URL</label>
+            <input type="text" id="api-base-url" value="http://localhost:5000/api" class="w-full text-xs p-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 font-mono">
+            <p class="text-[11px] text-slate-400 mt-1">Endpoints expected: <code class="font-mono">/data/{schema}/{table}</code></p>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 text-[11px] leading-relaxed">
+          <strong>Tip:</strong> The mock mode contains the exact relational hierarchy and schema definitions from your SQL statements, letting you demo and test the UI immediately in Live Server without running PostgreSQL.
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+        <button onclick="toggleConfigModal()" class="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 font-medium hover:bg-slate-50 transition-colors">Cancel</button>
+        <button onclick="saveDataSourceConfig()" class="px-4 py-2 rounded-lg bg-sky-600 hover:bg-sky-700 text-white font-medium transition-colors">Apply Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+  <script>
+    // Initialize Lucide icons on DOM ready
+    window.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>
