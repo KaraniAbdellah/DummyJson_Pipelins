@@ -1,0 +1,52 @@
+name: bim_light_sales
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: bim-postgres
+    environment:
+      POSTGRES_DB: bim
+      POSTGRES_USER: bim
+      POSTGRES_PASSWORD: bim
+    volumes:
+      - pgdata:/var/lib/postgresql/data                            # data survives container restarts
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql   # creates raw / staging / mart (first start only)
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bim -d bim"]
+      interval: 3s
+      retries: 20
+  adminer:
+    image: adminer
+    container_name: bim-adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on: [postgres]
+    ports:
+      - "8085:8080"        # http://localhost:8085
+
+  airflow:
+    image: apache/airflow:2.9.3
+    container_name: bim-airflow
+    command: standalone
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"                # hide Airflow demo DAGs
+      AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: "false"   # our DAGs start by themselves
+      PG_HOST: postgres        # how the DAGs connect to the database
+      PG_DB: bim
+      PG_USER: bim
+      PG_PASSWORD: bim
+      VERIFY_SSL: "true"       # set to "false" if your network blocks HTTPS (see README)
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - airflow_home:/opt/airflow       # keeps airflow.db (run history) and the admin password
+      - ./dags:/opt/airflow/dags
+      - ./sql:/opt/airflow/sql
+      - ./data:/opt/airflow/data
+    ports:
+      - "8081:8080"        # http://localhost:8081
+
+volumes:
+  pgdata:
+  airflow_home:
