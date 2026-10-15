@@ -10,7 +10,7 @@ from airflow.operators.python import PythonOperator
 import pandas as pd
 from db import get_connection, run_sql_file
 
-DATA_PATH = "/home/abdellah/Documents/git_projects/DummyJson_Pipelins/data"
+DATA_PATH = "/opt/airflow/data"
 
 
 

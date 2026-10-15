@@ -13,7 +13,7 @@ from datetime import datetime
 
 
 def _create_mart_tables(f_name):
-    FULL_PATH = f"/home/abdellah/Documents/git_projects/DummyJson_Pipelins/sql/mart/{f_name}.sql"
+    FULL_PATH = f"/opt/airflow/sql/mart/{f_name}.sql"
     run_sql_file(FULL_PATH)
     print("Create Tables in Staging Schema")
 

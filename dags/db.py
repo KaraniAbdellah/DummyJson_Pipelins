@@ -5,7 +5,7 @@ def get_connection():
     conn = psycopg2.connect(
         dbname="Ecommerce",
         user="postgres",
-        password="postgres",
+        password="1234",
         host="localhost"
     )
     return conn

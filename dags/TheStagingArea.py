@@ -7,7 +7,7 @@ from db import run_sql_file
 
 
 def _create_staging_table(f_name):
-    FULL_PATH = f"/home/abdellah/Documents/git_projects/DummyJson_Pipelins/sql/staging/{f_name}.sql"
+    FULL_PATH = f"/opt/airflow/sql/staging/{f_name}.sql"
     run_sql_file(FULL_PATH)
     print("Create Tables in Staging Schema")
 
