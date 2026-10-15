@@ -1,5 +1,3 @@
-# DummyJson Data Pipeline
-
 A small data pipeline built with **Apache Airflow** and **PostgreSQL**.
 
 It collects sales data in two ways:
