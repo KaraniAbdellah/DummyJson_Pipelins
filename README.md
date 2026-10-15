@@ -1,7 +1,7 @@
 Build a datapipeline that get data as batch as cs files every day and get data as streaming ever minute.
 
 # Archicture
-<img src="./images/platform architecture.png">
+<img src="./images/platform_architecture.png">
 
 so this architecture compose for multi dags:
 here is picture for all dags from airflow.
